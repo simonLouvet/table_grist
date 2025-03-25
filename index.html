@@ -8,15 +8,27 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Additional styles for iframe integration */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        /* Remove spacing that would be used by header/footer */
+        main.container {
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Annuaire des Thérapeutes Féministes</h1>
-            <p>Trouvez un·e thérapeute féministe près de chez vous</p>
-        </div>
-    </header>
-
     <main class="container">
         <section id="filters" class="filters-section">
             <h2>Filtres</h2>
@@ -38,13 +50,27 @@
         </section>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>Réseau de thérapeutes avec des valeurs féministes et inclusives en France</p>
-            <p>Contact: <a href="mailto:contact@therapeutesfeministes.org">contact@therapeutesfeministes.org</a></p>
-        </div>
-    </footer>
-
     <script src="app.js"></script>
+    <script>
+        // Make sure all record data is displayed
+        document.addEventListener('DOMContentLoaded', function() {
+            // This function will ensure all columns from the data are displayed
+            // when rendering therapist cards in the app.js file
+            window.displayAllColumns = true;
+            
+            // Notify parent frame when content height changes
+            function updateParentHeight() {
+                const height = document.body.scrollHeight;
+                if (window.parent && window.parent.postMessage) {
+                    window.parent.postMessage({ type: 'resize', height: height }, '*');
+                }
+            }
+            
+            // Update height on load and when content changes
+            window.addEventListener('load', updateParentHeight);
+            const observer = new MutationObserver(updateParentHeight);
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+    </script>
 </body>
 </html> 
