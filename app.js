@@ -8,6 +8,8 @@ let columns = [];
 let activeFilters = {};
 let currentSortColumn = null;
 let currentSortDirection = 'asc';
+let currentView = 'list'; // Nouvelle variable pour suivre la vue actuelle ('list' ou 'profile')
+let selectedTherapistId = null; // Pour stocker l'ID du thérapeute sélectionné
 
 // Fonction principale d'initialisation
 async function init() {
@@ -27,6 +29,9 @@ async function init() {
         initializeFilters();
         initializeSortOptions();
         renderTherapists();
+        
+        // Initialiser les gestionnaires d'événements pour la vue détaillée
+        initializeProfileViewHandlers();
         
         hideLoading();
     } catch (error) {
@@ -98,21 +103,12 @@ function initializeFilters() {
 
 // Fonction pour initialiser les options de tri
 function initializeSortOptions() {
-    const sortContainer = document.getElementById('sort-options');
-    sortContainer.innerHTML = '';
+    const sortSelect = document.getElementById('sort-select');
     
-    const sortLabel = document.createElement('span');
-    sortLabel.textContent = 'Trier par:';
-    sortContainer.appendChild(sortLabel);
-    
-    const sortSelect = document.createElement('select');
-    sortSelect.id = 'sort-select';
-    
-    // Ajouter une option par défaut
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Sélectionner...';
-    sortSelect.appendChild(defaultOption);
+    // Conserver l'option par défaut et ajouter les autres options
+    while (sortSelect.options.length > 1) {
+        sortSelect.remove(1);
+    }
     
     // Ajouter une option pour chaque colonne
     columns.forEach(column => {
@@ -128,20 +124,25 @@ function initializeSortOptions() {
         renderTherapists();
     });
     
-    sortContainer.appendChild(sortSelect);
-    
-    // Ajouter les boutons pour changer l'ordre de tri
-    const directionBtn = document.createElement('button');
-    directionBtn.textContent = '↑↓';
-    directionBtn.className = 'sort-direction-btn';
+    // Ajouter l'événement au bouton de direction de tri
+    const directionBtn = document.querySelector('.sort-direction-btn');
     directionBtn.addEventListener('click', () => {
         if (currentSortColumn) {
             currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
             renderTherapists();
         }
     });
-    
-    sortContainer.appendChild(directionBtn);
+}
+
+// Fonction pour initialiser les gestionnaires d'événements pour la vue détaillée
+function initializeProfileViewHandlers() {
+    // Gestionnaire pour le bouton de retour aux résultats
+    document.getElementById('back-to-results').addEventListener('click', function() {
+        document.getElementById('profile-detail').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('filters').style.display = 'block';
+        updateParentHeight();
+    });
 }
 
 // Fonction pour mettre à jour les filtres actifs
@@ -216,52 +217,277 @@ function renderTherapists() {
     const filteredTherapists = filterTherapists(therapists);
     const sortedTherapists = sortTherapists(filteredTherapists);
     
+    // Afficher le message "Aucun résultat" si nécessaire
     if (sortedTherapists.length === 0) {
-        const noResults = document.createElement('div');
-        noResults.className = 'no-results';
-        noResults.textContent = 'Aucun résultat ne correspond à vos critères de recherche.';
-        container.appendChild(noResults);
+        document.getElementById('no-results').style.display = 'block';
         return;
+    } else {
+        document.getElementById('no-results').style.display = 'none';
     }
     
     // Créer une carte pour chaque thérapeute
     sortedTherapists.forEach(therapist => {
-        const card = document.createElement('div');
-        card.className = 'therapist-card';
+        const template = document.getElementById('therapist-card-template');
+        const card = document.importNode(template.content, true);
         
-        const name = document.createElement('h3');
-        name.textContent = therapist.nom || 'Sans nom';
-        card.appendChild(name);
+        // Sélectionner tous les éléments avec un attribut data-field dans la carte
+        const fieldElements = card.querySelectorAll('[data-field]');
         
-        const description = document.createElement('p');
-        description.textContent = therapist.description || 'Aucune description disponible';
-        card.appendChild(description);
+        fieldElements.forEach(element => {
+            const fieldName = element.getAttribute('data-field');
+            
+            // Traiter différemment selon le type d'élément
+            if (element.tagName === 'IMG') {
+                // Cas spécial pour les images
+                const value = therapist[fieldName];
+                if (value && Array.isArray(value) && value.length >= 2 && value[0] === "L") {
+                    const attachmentId = value[1];
+                    element.src = `http://localhost/data/api/67e330227da953bf388dfbb1-attachement/${attachmentId}`;
+                    element.style.display = 'block';
+                } else {
+                    // Cacher l'élément si pas d'image
+                    element.style.display = 'none';
+                }
+            } else {
+                // Vérifier si c'est un champ de type Choice (choix multiple)
+                const column = columns.find(col => col.id === fieldName);
+                if (column && column.fields.type === 'Choice') {
+                    // Vider le contenu existant
+                    element.innerHTML = '';
+                    
+                    // Créer des tags pour chaque valeur
+                    const values = Array.isArray(therapist[fieldName]) 
+                        ? therapist[fieldName] 
+                        : [therapist[fieldName]];
+                    
+                    values.forEach(value => {
+                        if (value) {
+                            const tag = document.createElement('span');
+                            tag.className = 'choice-tag';
+                            tag.textContent = value;
+                            element.appendChild(tag);
+                        }
+                    });
+                } else {
+                    // Pour les autres éléments, simplement définir le contenu texte
+                    element.textContent = therapist[fieldName] || '';
+                }
+            }
+        });
         
-        if (therapist.type) {
-            const type = document.createElement('span');
-            type.className = 'type';
-            type.textContent = therapist.type;
-            card.appendChild(type);
-        }
+        // Ajouter un gestionnaire d'événements pour le bouton "Voir le profil"
+        const profileBtn = card.querySelector('.profile-btn');
+        profileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showProfileDetail(therapist);
+        });
         
         container.appendChild(card);
     });
+    
+    // Mettre à jour la hauteur du conteneur parent
+    updateParentHeight();
+}
+
+// Fonction pour afficher la vue détaillée du profil
+function showProfileDetail(therapistData) {
+    // Masquer les sections de résultats et de filtres
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('filters').style.display = 'none';
+    
+    // Analyser les balises dans profile-content et remplir avec les données appropriées
+    const profileContent = document.querySelector('.profile-content');
+    
+    // Garder une trace des champs déjà rendus
+    const renderedFields = new Set();
+    
+    if (profileContent) {
+        // Sélectionner tous les éléments avec un attribut data-field
+        const fieldElements = profileContent.querySelectorAll('[data-field]');
+        
+        fieldElements.forEach(element => {
+            const fieldName = element.getAttribute('data-field');
+            renderedFields.add(fieldName); // Ajouter à la liste des champs déjà rendus
+            
+
+                // Traiter différemment selon le type d'élément
+                if (element.tagName === 'IMG') {
+                    // Cas spécial pour les images
+                    console.log('____ photo');
+                    const value = therapistData[fieldName];
+                    console.log('____ value', value);
+                    if (value && Array.isArray(value) && value.length >= 2 && value[0] === "L") {
+                        const attachmentId = value[1];
+                        element.src = `http://localhost/data/api/67e330227da953bf388dfbb1-attachement/${attachmentId}`;
+                        element.style.display = 'block';
+                    } else {
+                        console.log('____ hide photo');
+                        // Cacher l'élément si pas d'image
+                        element.style.display = 'none';
+                    }
+                } else {
+                    // Vérifier si c'est un champ de type Choice (choix multiple)
+                    const column = columns.find(col => col.id === fieldName);
+                    if (column && column.fields.type === 'Choice') {
+                        // Vider le contenu existant
+                        element.innerHTML = '';
+                        
+                        // Créer des tags pour chaque valeur
+                        const values = Array.isArray(therapistData[fieldName]) 
+                            ? therapistData[fieldName] 
+                            : [therapistData[fieldName]];
+                        
+                        values.forEach(value => {
+                            if (value) {
+                                const tag = document.createElement('span');
+                                tag.className = 'choice-tag';
+                                tag.textContent = value;
+                                element.appendChild(tag);
+                            }
+                        });
+                    } else {
+                        // Pour les autres éléments, simplement définir le contenu texte
+                        element.textContent = therapistData[fieldName];
+                    }
+                }
+
+        });
+    }
+    
+    // Gérer les informations supplémentaires
+    const additionalContainer = document.getElementById('detail-additional');
+    additionalContainer.innerHTML = '';
+    
+    // Liste des champs à ignorer (en plus des champs déjà rendus)
+    const skipFields = [];
+    let hasAdditionalInfo = false;
+    
+    // Ajouter toutes les autres informations
+    columns.forEach(column => {
+        const value = therapistData[column.id];
+        
+        // Vérifier si le champ n'est pas déjà rendu et a une valeur
+        if (!renderedFields.has(column.id) && !skipFields.includes(column.id) && value) {
+            hasAdditionalInfo = true;
+            const item = document.createElement('div');
+            item.className = 'detail-info-item';
+            
+            const label = document.createElement('div');
+            label.className = 'detail-info-label';
+            label.textContent = column.fields.label;
+            
+            const content = document.createElement('div');
+            content.className = 'detail-info-content';
+            
+            if (Array.isArray(value)) {
+                if (column.fields.type === 'Attachments') {
+                    // Traiter les pièces jointes
+                    if (value.length >= 2 && value[0] === "L") {
+                        const attachmentId = value[1];
+                        const img = document.createElement('img');
+                        img.src = `http://localhost/data/api/67e330227da953bf388dfbb1-attachement/${attachmentId}`;
+                        img.alt = column.fields.label;
+                        img.style.maxWidth = '100%';
+                        content.appendChild(img);
+                    }
+                } else if (column.fields.type === 'Choice') {
+                    // Traiter les choix multiples avec des tags
+                    value.forEach(choiceValue => {
+                        if (choiceValue) {
+                            const tag = document.createElement('span');
+                            tag.className = 'choice-tag';
+                            tag.textContent = choiceValue;
+                            content.appendChild(tag);
+                        }
+                    });
+                } else {
+                    content.textContent = value.join(', ');
+                }
+            } else if (typeof value === 'boolean') {
+                content.textContent = value ? 'Oui' : 'Non';
+            } else if (column.fields.type === 'Choice') {
+                // Traiter un choix unique avec un tag
+                const tag = document.createElement('span');
+                tag.className = 'choice-tag';
+                tag.textContent = value;
+                content.appendChild(tag);
+            } else {
+                content.textContent = value;
+            }
+            
+            item.appendChild(label);
+            item.appendChild(content);
+            additionalContainer.appendChild(item);
+        }
+    });
+    
+    // Masquer le conteneur des informations supplémentaires s'il est vide
+    const additionalSection = document.querySelector('.detail-additional-section');
+    if (additionalSection) {
+        additionalSection.style.display = hasAdditionalInfo ? 'block' : 'none';
+    }
+    
+    // Afficher la section de profil détaillé
+    document.getElementById('profile-detail').style.display = 'block';
+    
+    // Mettre à jour la hauteur du conteneur parent
+    updateParentHeight();
 }
 
 // Fonctions utilitaires pour l'interface
 function showLoading() {
-    const container = document.getElementById('therapists-list');
-    container.innerHTML = '<div class="loading">Chargement des données...</div>';
+    // document.getElementById('loading-message').style.display = 'block';
 }
 
 function hideLoading() {
-    // Cette fonction est appelée après le rendu des thérapeutes
+    document.getElementById('loading-message').style.display = 'none';
 }
 
 function showError(message) {
-    const container = document.getElementById('therapists-list');
-    container.innerHTML = `<div class="error">${message}</div>`;
+    document.getElementById('error-message').textContent = message;
+    document.getElementById('error-message').style.display = 'block';
+}
+
+// Fonction pour mettre à jour la hauteur du conteneur parent (pour l'intégration iframe)
+function updateParentHeight() {
+    const height = document.body.scrollHeight;
+    if (window.parent && window.parent.postMessage) {
+        window.parent.postMessage({ type: 'resize', height: height }, '*');
+    }
+}
+
+// Fonction pour gérer l'affichage des pièces jointes
+function handleAttachment(attachmentValue) {
+    if (Array.isArray(attachmentValue) && attachmentValue.length >= 2 && attachmentValue[0] === "L") {
+        const attachmentId = attachmentValue[1];
+        return `<img src="http://localhost/data/api/67e330227da953bf388dfbb1-attachement/${attachmentId}" class="attachment-image" alt="Image jointe">`;
+    }
+    return '';
 }
 
 // Démarrer l'application au chargement de la page
-document.addEventListener('DOMContentLoaded', init); 
+document.addEventListener('DOMContentLoaded', function() {
+    // Assurer que toutes les données des enregistrements sont affichées
+    window.displayAllColumns = true;
+    
+    // Exposer la fonction handleAttachment globalement
+    window.handleAttachment = handleAttachment;
+    
+    // Exposer la fonction showProfileDetail globalement
+    window.showProfileDetail = showProfileDetail;
+    
+    // Initialiser l'application
+    init();
+    
+    // Gestionnaire pour le bouton de retour aux résultats
+    document.getElementById('back-to-results').addEventListener('click', function() {
+        document.getElementById('profile-detail').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('filters').style.display = 'block';
+        updateParentHeight();
+    });
+    
+    // Observer les changements dans le DOM pour mettre à jour la hauteur
+    const observer = new MutationObserver(updateParentHeight);
+    observer.observe(document.body, { childList: true, subtree: true });
+}); 

@@ -17,12 +17,198 @@ body {
     color: var(--text-color);
     line-height: 1.6;
     background-color: #fff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mise en page principale avec CSS Grid */
+main.container {
+    padding-top: 0;
+    padding-bottom: 0;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-areas: 
+        "error error"
+        "filters results"
+        "profile profile";
+    gap: 30px;
+}
+
+#error-message {
+    grid-area: error;
+}
+
+.filters-section {
+    grid-area: filters;
+    display: flex;
+    flex-direction: column;
+}
+
+.results-section {
+    grid-area: results;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-detail {
+    grid-area: profile;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Responsive design avec Grid */
+@media (max-width: 768px) {
+    main.container {
+        grid-template-columns: 1fr;
+        grid-template-areas: 
+            "error"
+            "filters"
+            "results"
+            "profile";
+    }
+}
+
+/* Utiliser Flexbox pour les éléments internes */
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sort-options {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Utiliser CSS Grid pour la liste des thérapeutes */
+.therapists-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Utiliser Flexbox pour les cartes de thérapeutes */
+.therapist-card {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--light-bg);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.therapist-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.additional-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Mise en page du profil détaillé avec Flexbox et Grid */
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.profile-main-info {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.profile-identity {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.detail-address {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.profile-contact, 
+.profile-specialties, 
+.profile-description, 
+.profile-additional {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detail-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Utiliser CSS Grid pour les informations complémentaires */
+.detail-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.detail-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 header {
@@ -44,99 +230,11 @@ main {
     gap: 30px;
 }
 
-@media (max-width: 768px) {
-    main {
-        grid-template-columns: 1fr;
-    }
-}
-
-.filters-section {
-    background-color: var(--light-bg);
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.filters-section h2 {
-    margin-bottom: 20px;
-    color: var(--secondary-color);
-}
-
-.filter-group {
-    margin-bottom: 20px;
-}
-
-.filter-group h3 {
-    margin-bottom: 10px;
-    font-size: 1rem;
-}
-
-.filter-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.checkbox-group input[type="checkbox"] {
-    accent-color: var(--primary-color);
-}
-
-.results-section {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-}
-
-.results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.results-header h2 {
-    color: var(--secondary-color);
-}
-
-.sort-options {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.sort-options select {
-    padding: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background-color: white;
-}
-
-.therapists-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.therapist-card {
-    background-color: var(--light-bg);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.therapist-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+.therapist-name {
+    color: #e67e22;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    font-weight: 500;
 }
 
 .therapist-card h3 {
@@ -156,6 +254,14 @@ main {
     border-radius: 4px;
     font-size: 0.8rem;
     margin-top: 10px;
+}
+
+/* Style pour les messages */
+.no-results {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1rem;
+    color: #666;
 }
 
 footer {
@@ -205,4 +311,101 @@ footer a {
     border-radius: 8px;
     margin-bottom: 20px;
     text-align: center;
+}
+
+/* Styles pour la vue détaillée du profil */
+.profile-detail {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.back-button {
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-right: 20px;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: #e0e0e0;
+}
+
+.profile-title {
+    flex: 1;
+    margin: 0;
+    color: #483d8b;
+}
+
+.profile-photo-container {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 30px;
+}
+
+.profile-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-name {
+    color: #e67e22;
+    font-size: 1.8rem;
+    margin: 0 0 10px 0;
+}
+
+.detail-profession {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.profile-contact h4, .profile-specialties h4, .profile-description h4, .profile-additional h4 {
+    color: #483d8b;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+.detail-tag {
+    background-color: #7f5a83;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+}
+
+.detail-text {
+    line-height: 1.6;
+}
+
+.detail-info-item {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.detail-info-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #483d8b;
 } 
+
+.choice-tag {
+    display: inline-block;
+    background-color: #f0f0f0;
+    border-radius: 16px;
+    padding: 4px 12px;
+    margin: 2px 4px 2px 0;
+    font-size: 0.9em;
+}

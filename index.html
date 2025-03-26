@@ -8,28 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Additional styles for iframe integration */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Montserrat', sans-serif;
-        }
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 15px;
-        }
-        /* Remove spacing that would be used by header/footer */
-        main.container {
-            padding-top: 0;
-            padding-bottom: 0;
-        }
-    </style>
 </head>
 <body>
     <main class="container">
+        <!-- Message d'erreur (caché par défaut) -->
+        <div id="error-message" class="error" style="display: none;">
+            Une erreur est survenue lors du chargement des données. Veuillez réessayer plus tard.
+        </div>
+
         <section id="filters" class="filters-section">
             <h2>Filtres</h2>
             <div id="filter-options" class="filter-options">
@@ -41,36 +27,85 @@
             <div class="results-header">
                 <h2>Résultats</h2>
                 <div id="sort-options" class="sort-options">
-                    <!-- Les options de tri seront générées dynamiquement ici -->
+                    <span>Trier par:</span>
+                    <select id="sort-select">
+                        <option value="">Sélectionner...</option>
+                        <!-- Les autres options seront générées dynamiquement -->
+                    </select>
+                    <button class="sort-direction-btn">↑↓</button>
                 </div>
             </div>
+            
+            <!-- Message "Aucun résultat" (caché par défaut) -->
+            <div id="no-results" class="no-results" style="display: none;">
+                Aucun résultat ne correspond à vos critères de recherche.
+            </div>
+            
+            <!-- Message de chargement (visible par défaut) -->
+            <div id="loading-message" class="loading">
+                Chargement des données...
+            </div>
+
+            <!-- Message d'erreur (caché par défaut) -->
+            <div id="error-message" class="error" style="display: none;">
+                Une erreur est survenue lors du chargement des données. Veuillez réessayer plus tard.
+            </div>
+            
             <div id="therapists-list" class="therapists-list">
                 <!-- La liste des thérapeutes sera générée dynamiquement ici -->
             </div>
         </section>
+
+        <!-- Vue détaillée du profil (cachée par défaut) -->
+        <section id="profile-detail" class="profile-detail" style="display: none;">
+            <div class="profile-header">
+                <button id="back-to-results" class="back-button">← Retour aux résultats</button>
+                <h2 class="profile-title">Profil détaillé</h2>
+            </div>
+            
+            <div class="profile-content">
+                
+                <div class="profile-photo-container">
+                    <img src="" alt="Photo du thérapeute" class="profile-photo" id="detail-photo" data-field="photo">
+                </div>
+                <div class="profile-identity">
+                    <h3 id="detail-name" class="detail-name" data-field="nom"></h3>
+                    <p id="detail-description" class="detail-description" data-field="description"></p>
+                </div>
+                <div class="profile-type">
+                    <h4>Type de praticien</h4>
+                    <div id="detail-type" class="detail-type" data-field="type"></div>
+                </div>
+                
+                <div class="profile-additional">
+                    <h4>Informations complémentaires</h4>
+                    <div id="detail-additional" class="detail-info-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Template pour les cartes de thérapeutes -->
+        <template id="therapist-card-template">
+            <div class="therapist-card">
+                <div class="therapist-info">
+                    <h3 class="therapist-name" data-field="nom"></h3>
+                    <p class="therapist-description" data-field="description"></p>
+                    <div id="detail-type" class="detail-type" data-field="type"></div>
+
+                    
+                    <div class="additional-info">
+                        <!-- Les informations supplémentaires seront ajoutées ici dynamiquement -->
+                    </div>
+                    
+                    <a href="#" class="profile-btn">VOIR LE PROFIL</a>
+                </div>
+                <div class="photo-container">
+                    <img src="" alt="Photo du thérapeute" class="therapist-photo" data-field="photo">
+                </div>
+            </div>
+        </template>
     </main>
 
     <script src="app.js"></script>
-    <script>
-        // Make sure all record data is displayed
-        document.addEventListener('DOMContentLoaded', function() {
-            // This function will ensure all columns from the data are displayed
-            // when rendering therapist cards in the app.js file
-            window.displayAllColumns = true;
-            
-            // Notify parent frame when content height changes
-            function updateParentHeight() {
-                const height = document.body.scrollHeight;
-                if (window.parent && window.parent.postMessage) {
-                    window.parent.postMessage({ type: 'resize', height: height }, '*');
-                }
-            }
-            
-            // Update height on load and when content changes
-            window.addEventListener('load', updateParentHeight);
-            const observer = new MutationObserver(updateParentHeight);
-            observer.observe(document.body, { childList: true, subtree: true });
-        });
-    </script>
 </body>
 </html> 
